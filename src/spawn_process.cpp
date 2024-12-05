@@ -1,13 +1,13 @@
 #include "Cool/spawn_process.hpp"
 #include <cassert>
 #include <filesystem>
-
-namespace {
+#include <optional>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+namespace {
 std::string GetLastErrorAsString()
 {
     DWORD errorMessageID = ::GetLastError();
@@ -43,34 +43,32 @@ auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -
     CloseHandle(pi.hThread);
     return std::nullopt;
 }
+} // namespace
 
 #elif defined(__linux__) || defined(__APPLE__)
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <cerrno>
 #include <cstring>
 
+namespace {
 auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -> std::optional<std::string>
 {
     pid_t pid = fork();
 
     if (pid < 0)
-    {
-        // Fork failed
-        std::cerr << "Fork failed: " << strerror(errno) << std::endl;
-    }
-    else if (pid == 0)
-    {
-        // In child process:
+        return std::string{"Fork failed: "} + strerror(errno);
+
+    if (pid == 0) // We are in the child process:
         execl(executable_absolute_path.string().c_str(), executable_absolute_path.string().c_str(), nullptr);
-        _exit(1); // Ensure the child process exits
-    }
+
+    return std::nullopt;
 }
+} // namespace
 
 #else
 #error "Unsupported platform"
 #endif
-} // namespace
 
 namespace Cool {
 
