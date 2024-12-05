@@ -1,19 +1,9 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <iostream>
 #include "Cool/spawn_process.hpp"
-#include "doctest/doctest.h"
 
-
-// Check out doctest's documentation: https://github.com/doctest/doctest/blob/master/doc/markdown/tutorial.md
-
-int factorial(int number)
+int main()
 {
-    return number <= 1 ? number : factorial(number - 1) * number;
-}
-
-TEST_CASE("testing the factorial function")
-{
-    CHECK(factorial(1) == 1);
-    CHECK(factorial(2) == 2);
-    CHECK(factorial(3) == 6);
-    CHECK(factorial(10) == 3628800);
+    std::cout << "Start spawning process\n";
+    Cool::spawn_process(EXECUTABLE_PATH);
+    std::cout << "Done spawning process\n";
 }
