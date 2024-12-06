@@ -29,14 +29,22 @@ std::string GetLastErrorAsString()
     return message;
 }
 
-auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -> std::optional<std::string>
+auto spawn_process_impl(std::filesystem::path const& executable_absolute_path, std::vector<std::string> const& args) -> std::optional<std::string>
 {
     STARTUPINFO si;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(pi));
-    if (!CreateProcess(executable_absolute_path.string().c_str(), nullptr, nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi))
+
+    // Combine the exe path and arguments into a single command line
+    std::string command_line = '\"' + executable_absolute_path.string() + '\"'; // we need to add quotes in case exe path contains spaces
+    for (auto const& arg : args)
+        command_line += " \"" + arg + '\"';
+    auto cmd = std::vector<char>(command_line.begin(), command_line.end()); // The API needs a char* so we can't use std::string::c_str()
+    cmd.push_back('\0');
+
+    if (!CreateProcess(nullptr, cmd.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi))
         return GetLastErrorAsString();
 
     CloseHandle(pi.hProcess);
@@ -52,7 +60,7 @@ auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -
 #include <cstring>
 
 namespace {
-auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -> std::optional<std::string>
+auto spawn_process_impl(std::filesystem::path const& executable_absolute_path, std::vector<std::string> const& args) -> std::optional<std::string>
 {
     pid_t pid = fork();
 
@@ -60,7 +68,16 @@ auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -
         return std::string{"Fork failed: "} + strerror(errno);
 
     if (pid == 0) // We are in the child process:
-        execl(executable_absolute_path.string().c_str(), executable_absolute_path.string().c_str(), nullptr);
+    {
+        auto const exe_path   = executable_absolute_path.string(); // Store the string so that the c_str() is kept alive
+        auto       args_array = std::vector<const char*>{};
+        args_array.push_back(exe_path.c_str());
+        for (auto const& arg : args)
+            args_array.push_back(arg.c_str());
+        args_array.push_back(nullptr);
+
+        execv(exe_path.c_str(), args_array.data());
+    }
 
     return std::nullopt;
 }
@@ -72,10 +89,10 @@ auto spawn_process_impl(std::filesystem::path const& executable_absolute_path) -
 
 namespace Cool {
 
-auto spawn_process(std::filesystem::path const& executable_absolute_path) -> std::optional<std::string>
+auto spawn_process(std::filesystem::path const& executable_absolute_path, std::vector<std::string> const& args) -> std::optional<std::string>
 {
     assert(std::filesystem::weakly_canonical(executable_absolute_path) == executable_absolute_path);
-    return spawn_process_impl(executable_absolute_path);
+    return spawn_process_impl(executable_absolute_path, args);
 }
 
 } // namespace Cool

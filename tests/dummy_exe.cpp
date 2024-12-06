@@ -3,8 +3,11 @@
 #include <iomanip>
 #include <iostream>
 
-int main()
+int main(int argc, char** argv)
 {
+    for (int i = 1; i < argc; ++i)
+        std::cout << "Command-line arg: '" << argv[i] << "'\n";
+
     int prev_sec{};
     int count{0};
     while (count < 5)
