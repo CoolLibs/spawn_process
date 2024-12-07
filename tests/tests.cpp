@@ -31,7 +31,7 @@ int main()
     std::this_thread::sleep_for(6s);
 
     std::cout << "Start spawning process\n";
-    Cool::spawn_process(EXECUTABLE_PATH, {"Hello", "World", "\\\"two words\\\""});
+    Cool::spawn_process(EXECUTABLE_PATH, {"Hello", "World", "\\\"two words\\\""}); // NB: this will output something different on Windows vs Linux/Mac
     std::cout << "Done spawning process\n";
 
     std::this_thread::sleep_for(6s);
