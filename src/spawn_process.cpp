@@ -3,6 +3,15 @@
 #include <filesystem>
 #include <optional>
 
+namespace {
+auto string_to_vector_of_char(std::string const& str) -> std::vector<char>
+{
+    auto res = std::vector<char>(str.begin(), str.end());
+    res.push_back('\0');
+    return res;
+}
+} // namespace
+
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -41,8 +50,7 @@ auto spawn_process_impl(std::filesystem::path const& executable_absolute_path, s
     std::string command_line = '\"' + executable_absolute_path.string() + '\"'; // we need to add quotes in case exe path contains spaces
     for (auto const& arg : args)
         command_line += " \"" + arg + '\"';
-    auto cmd = std::vector<char>(command_line.begin(), command_line.end()); // The API needs a char* so we can't use std::string::c_str()
-    cmd.push_back('\0');
+    auto cmd = string_to_vector_of_char(command_line); // The API needs a char* so we can't use std::string::c_str()
 
     if (!CreateProcess(nullptr, cmd.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi))
         return GetLastErrorAsString();
@@ -69,14 +77,19 @@ auto spawn_process_impl(std::filesystem::path const& executable_absolute_path, s
 
     if (pid == 0) // We are in the child process:
     {
-        auto const exe_path   = executable_absolute_path.string(); // Store the string so that the c_str() is kept alive
-        auto       args_array = std::vector<const char*>{};
-        args_array.push_back(exe_path.c_str());
+        // The API needs an array of char* so we can't use std::string::c_str()
+        // So we create all the std::vector<char>, and then in a second std::vector store all their data pointers
+        auto args_array_as_vec = std::vector<std::vector<char> >{};
+        args_array_as_vec.push_back(string_to_vector_of_char(executable_absolute_path.string()));
         for (auto const& arg : args)
-            args_array.push_back(arg.c_str());
+            args_array_as_vec.push_back(string_to_vector_of_char(arg));
+
+        auto args_array = std::vector<char*>{};
+        for (auto& vec : args_array_as_vec)
+            args_array.push_back(vec.data());
         args_array.push_back(nullptr);
 
-        execv(exe_path.c_str(), args_array.data());
+        execv(executable_absolute_path.string().c_str(), args_array.data());
     }
 
     return std::nullopt;
