@@ -78,7 +78,7 @@ auto spawn_process_impl(Cool::SpawnProcessArgs const& args) -> std::optional<std
     if (pid == 0) // We are in the child process:
     {
         if (args.working_directory.has_value())
-            chdir(args.working_directory->string().c_str());
+            std::ignore = chdir(args.working_directory->string().c_str());
 
         // The API needs an array of char* so we can't use std::string::c_str()
         // So we create all the std::vector<char>, and then in a second std::vector store all their data pointers
