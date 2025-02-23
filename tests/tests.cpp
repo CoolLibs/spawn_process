@@ -8,7 +8,7 @@ int main()
 
     {
         std::cout << "Start spawning process\n";
-        auto const maybe_err = Cool::spawn_process(EXECUTABLE_PATH);
+        auto const maybe_err = Cool::spawn_process({EXECUTABLE_PATH});
         if (maybe_err)
             std::cerr << "ERR" << *maybe_err << '\n';
         std::cout << "Done spawning process\n";
@@ -17,7 +17,7 @@ int main()
 
     {
         std::cout << "Start spawning process\n";
-        auto const maybe_err = Cool::spawn_process(EXECUTABLE_PATH, {"Hello"});
+        auto const maybe_err = Cool::spawn_process({EXECUTABLE_PATH, {"Hello"}});
         if (maybe_err)
             std::cerr << "ERR" << *maybe_err << '\n';
         std::cout << "Done spawning process\n";
@@ -26,7 +26,7 @@ int main()
 
     {
         std::cout << "Start spawning process\n";
-        auto const maybe_err = Cool::spawn_process(EXECUTABLE_PATH, {"Hello", "World"});
+        auto const maybe_err = Cool::spawn_process({EXECUTABLE_PATH, {"Hello", "World"}});
         if (maybe_err)
             std::cerr << "ERR" << *maybe_err << '\n';
         std::cout << "Done spawning process\n";
@@ -35,7 +35,7 @@ int main()
 
     {
         std::cout << "Start spawning process\n";
-        auto const maybe_err = Cool::spawn_process(EXECUTABLE_PATH, {"Hello", "World", "two words"});
+        auto const maybe_err = Cool::spawn_process({EXECUTABLE_PATH, {"Hello", "World", "two words"}});
         if (maybe_err)
             std::cerr << "ERR" << *maybe_err << '\n';
         std::cout << "Done spawning process\n";
@@ -44,7 +44,7 @@ int main()
 
     {
         std::cout << "Start spawning process\n";
-        auto const maybe_err = Cool::spawn_process(EXECUTABLE_PATH, {"Hello", "World", "\\\"two words\\\""}); // NB: this will output something different on Windows vs Linux/Mac
+        auto const maybe_err = Cool::spawn_process({EXECUTABLE_PATH, {"Hello", "World", "\\\"two words\\\""}}); // NB: this will output something different on Windows vs Linux/Mac
         if (maybe_err)
             std::cerr << "ERR" << *maybe_err << '\n';
         std::cout << "Done spawning process\n";
