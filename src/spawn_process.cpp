@@ -92,7 +92,7 @@ auto spawn_process_impl(Cool::SpawnProcessArgs const& args) -> std::optional<std
             args_array.push_back(vec.data());
         args_array.push_back(nullptr);
 
-        execv(executable_absolute_path.string().c_str(), args_array.data());
+        execv(args.executable_absolute_path.string().c_str(), args_array.data());
     }
 
     return std::nullopt;
